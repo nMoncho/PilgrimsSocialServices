@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>runtime.js Tests</title>
+  <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.14.0.css">
+	<script type="text/javascript">
+		// Mock cr object
+		var cr = {"plugins_": {"PilgrimsSocialServices": null }};
+		
+		function assert2(cr, message) {
+			console.log("Assert2 Mock: " + message);
+		}
+
+		function getTestTarget(cruntime, pluginName) {
+			// you can save some work if you specify the plugin name
+			if (typeof pluginName == "undefined") {
+				for (var it in cruntime.plugins_) {
+					pluginName = it;
+				}
+
+				if (typeof pluginName == "undefined" || pluginName == null) {
+					throw "Coulnd't find plugin object iterating cr.plugins_ (Is it defined?)";
+				}
+			}
+
+			if (typeof cr.plugins_[pluginName] != "undefined" 
+					&& cr.plugins_[pluginName] != null) {
+				return cr.plugins_[pluginName].prototype;
+			} else if (cr.plugins_[pluginName] == null){
+				throw pluginName + " is null, check you syntax";
+			} else {
+				throw pluginName + " doesn't exists in cr.plugins_ or";
+			}
+		}
+	</script>
+</head>
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+  <script src="http://code.jquery.com/qunit/qunit-1.14.0.js"></script>
+  <script src="../c2 plugin/runtime.js"></script>
+	<script type="text/javascript">
+		var testTarget = cr.plugins_.PilgrimsSocialServices;
+		var acts = testTarget.prototype.acts;
+		var cnds = testTarget.prototype.cnds;
+		var exps = testTarget.prototype.exps;
+	</script>
+</body>
+</html>

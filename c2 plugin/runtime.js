@@ -149,6 +149,20 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 			}
 		});*/
 	};
+
+	Acts.prototype.logMessage = function (level, message) {
+		if (typeof console !== "undefined" && console != null) {
+			if (level === "debug") {
+				console.debug(message);
+			} else if (level === "info") {
+				console.info(message);
+			} else if (level === "error") {
+				console.error(message);
+			} else {
+				console.log(message);
+			}
+		}
+	} 
 	
 	// ... other actions here ...
 	

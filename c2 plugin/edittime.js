@@ -3,7 +3,7 @@
 	return {
 		"name":			"Pilgrim's Social Services",				// as appears in 'insert object' dialog, can be changed as long as "id" stays the same
 		"id":			"PilgrimsSocialServices",				// this is used to identify this plugin and is saved to the project; never change it
-		"version":		"0.1",					// (float in x.y format) Plugin version - C2 shows compatibility warnings based on this
+		"version":		"0.0.1",					// (float in x.y format) Plugin version - C2 shows compatibility warnings based on this
 		"description":	"Pilgrim's social services, used for pilgrim's games to log players, record scores, etc.",
 		"author":		"Pilgrim's Game Studio",
 		"help url":		"http://www.pilgrimsgamestudio.com/",
@@ -68,6 +68,10 @@
 
 AddNumberParam("Request timeout", "Enter the request timeout (in seconds) for this server interaction.", "60");
 AddAction(0, af_none, "Log-in player", "General", "Log-in player", "Logs in the player using the game. TODO: treat response", "loginPlayer");
+
+AddStringParam("Log level", "Defines the log level to be used in the loggin");
+AddStringParam("Message", "Message to log to the console");
+AddAction(1, af_none, "Log message", "General", "Logs message", "Log message to Chrome/Firebug console for debug and error", "logMessage");
 // AddStringParam("Message", "Enter a string to alert.");
 // AddAction(0, af_none, "Alert", "My category", "Alert {0}", "Description for my action!", "MyAction");
 
@@ -97,7 +101,7 @@ ACESDone();
 // new cr.Property(ept_link,		name,	link_text,		description, "firstonly")		// has no associated value; simply calls "OnPropertyChanged" on click
 
 var property_list = [
-	
+	new cr.Property(ept_text, "logging_pattern", "hh:mm:ss:sss {m}", "Defines the logging pattern to be used (i.e. hh:mm:ss:sss {m} or dd/MM/yyyy {m})");
 	];
 	
 // Called by IDE when a new object type is to be created

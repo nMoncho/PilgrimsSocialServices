@@ -1,4 +1,5 @@
-﻿function GetPluginSettings()
+﻿//foobar
+function GetPluginSettings()
 {
 	return {
 		"name":			"Pilgrim's Social Services",				// as appears in 'insert object' dialog, can be changed as long as "id" stays the same
@@ -7,7 +8,7 @@
 		"description":	"Pilgrim's social services, used for pilgrim's games to log players, record scores, etc.",
 		"author":		"Pilgrim's Game Studio",
 		"help url":		"http://www.pilgrimsgamestudio.com/",
-		"category":		"General",				// Prefer to re-use existing categories, but you can set anything here
+		"category":		"Web",				// Prefer to re-use existing categories, but you can set anything here
 		"type":			"object",				// either "world" (appears in layout and is drawn), else "object"
 		"rotatable":	false,					// only used when "type" is "world".  Enables an angle property on the object.
 		"flags":		0						// uncomment lines to enable flags...
@@ -53,7 +54,10 @@
 //				display_str,		// as appears in event sheet - use {0}, {1} for parameters and also <b></b>, <i></i>
 //				description,		// appears in event wizard dialog when selected
 //				script_name);		// corresponding runtime function name
-				
+AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieve", "default");
+AddCondition(1, cf_trigger, "Leaderboard retrieved successfuly", "Social Services"
+	, "Leaderboard {0} retrieve successfully", "Check this condition when you have requested for a leaderboard"
+	, "onLeaderboardRetrieveSuccess");
 
 ////////////////////////////////////////
 // Actions
@@ -67,11 +71,21 @@
 //			 script_name);		// corresponding runtime function name
 
 AddNumberParam("Request timeout", "Enter the request timeout (in seconds) for this server interaction.", "60");
-AddAction(0, af_none, "Log-in player", "General", "Log-in player", "Logs in the player using the game. TODO: treat response", "loginPlayer");
+AddAction(100, af_none, "Log-in player", "Social Services", "Log-in player", "Logs in the player using the game. TODO: treat response", "loginPlayer");
 
-AddStringParam("Log level", "Defines the log level to be used in the loggin");
+AddStringParam("Log level", "Defines the log level to be used in the loggin Enum{debug, info, error}", "\"info\"");
 AddStringParam("Message", "Message to log to the console");
-AddAction(1, af_none, "Log message", "General", "Logs message", "Log message to Chrome/Firebug console for debug and error", "logMessage");
+AddAction(101, af_none, "Log message", "General", "Logs message {0}.{1}", "Log message to Chrome/Firebug console for debug and error", "logMessage");
+
+AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieved", "\"default\"");
+AddNumberParam("Request timeout", "Enter the request timeout (in seconds) for this server interaction.", "60");
+AddAction(102, af_none, "Get Leaderboard by name", "Social Services", "Get Leaderboard {0}", "Retrives leaderboard from server with all its scores, you must watch for 'Leaderboard retrieved successfuly' condition", "getLeaderboardByName");
+
+AddStringParam("Player name", "Specifies the name to be used for the player");
+AddNumberParam("Is User action?", "Specifies if the registering is being requested by the user, or if it's automatic 1: true, otherwise false", "0");
+AddNumberParam("Request timeout", "Enter the request timeout (in seconds) for this server interaction.", "60");
+AddAction(103, af_none, "Register player", "Social Services", "Register player {0} being {1} user action", "Registers a player in the server", "registerPlayer");
+
 // AddStringParam("Message", "Enter a string to alert.");
 // AddAction(0, af_none, "Alert", "My category", "Alert {0}", "Description for my action!", "MyAction");
 
@@ -101,7 +115,9 @@ ACESDone();
 // new cr.Property(ept_link,		name,	link_text,		description, "firstonly")		// has no associated value; simply calls "OnPropertyChanged" on click
 
 var property_list = [
-	new cr.Property(ept_text, "logging_pattern", "hh:mm:ss:sss {m}", "Defines the logging pattern to be used (i.e. hh:mm:ss:sss {m} or dd/MM/yyyy {m})");
+	new cr.Property(ept_text, "logging_pattern", "hh:mm:ss:sss {m}", "Defines the logging pattern to be used (i.e. hh:mm:ss:sss {m} or dd/MM/yyyy {m})"),
+	new cr.Property(ept_text, "Game name", "SparkCity", "Defines the name of this game, it's used when retrieving all data from this game"),
+	new cr.Property(ept_integer, "Default timeout",	60,	"Defines the default timeout for all operations that must connect to the server")
 	];
 	
 // Called by IDE when a new object type is to be created

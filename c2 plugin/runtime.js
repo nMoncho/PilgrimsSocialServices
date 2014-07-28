@@ -14,7 +14,9 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 (function ()
 {
 	var pluginProto = cr.plugins_.PilgrimsSocialServices.prototype;
-		
+
+	var defaultTimeout;
+	var webstorageAvailable = false;
 	/////////////////////////////////////
 	// Object type class
 	pluginProto.Type = function(plugin)
@@ -43,11 +45,15 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	var instanceProto = pluginProto.Instance.prototype;
 
 	// called whenever an instance is created
-	instanceProto.onCreate = function()
-	{
+	instanceProto.onCreate = function() {
 		// note the object is sealed after this call; ensure any properties you'll ever need are set on the object
-		// e.g...
-		// this.myValue = 0;
+		this.defaultTimeout = this.properties[2];
+		
+		if (typeof cr.plugins_.WebStorage == "undefined") {
+			alert("WebStorage is not added to the project, this plugin is necessary to Pilgrim's Social Services");
+		} else {
+			webstorageAvailable = true;
+		}
 	};
 	
 	// called whenever an instance is destroyed
@@ -116,6 +122,10 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	// Conditions
 	function Cnds() {};
 
+	Cnds.prototype.onLeaderboardRetrieveSuccess = function(leaderboardName) {
+		console.log("Checking for " + leaderboardName);
+		return false;
+	}
 	// the example condition
 	/*Cnds.prototype.MyCondition = function (myparam)
 	{
@@ -138,7 +148,7 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 		/*jQuery.ajax({
 			"url": "http://www.pilgrimsgamestudio.com/sservices/login_player.php"
 			"data": {}, // TODO retrieve data from device
-			"timeout": timeout,
+			"timeout": getValidTimeout(timeout),
 			"dataType": "json",
 			"type": "POST",
 			"success": function(data, textStatus, jqXHR) {
@@ -149,20 +159,69 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 			}
 		});*/
 	};
-
+	
 	Acts.prototype.logMessage = function (level, message) {
 		if (typeof console !== "undefined" && console != null) {
-			if (level === "debug") {
+			if (level.toLowerCase() === "debug") {
 				console.debug(message);
-			} else if (level === "info") {
+			} else if (level.toLowerCase() === "info") {
 				console.info(message);
-			} else if (level === "error") {
+			} else if (level.toLowerCase() === "error") {
 				console.error(message);
 			} else {
 				console.log(message);
 			}
 		}
-	} 
+	}
+	
+	Acts.prototype.getLeaderboardByName = function(leaderboardName, timeout) {
+		console.log("Get leaderboard " + leaderboardName);
+		/*jQuery.ajax({
+			"url": "http://www.pilgrimsgamestudio.com/sservices/login_player.php"
+			"data": {}, // TODO retrieve data from device
+			"timeout": getValidTimeout(timeout),
+			"dataType": "json",
+			"type": "GET",
+			"success": function(data, textStatus, jqXHR) {
+				this.runtime.trigger(cr.plugins_.PilgrimsSocialServices.prototype.cnds.onLeaderboardRetrieveSuccess, this);
+			},
+			"error": function(jqXHR, textStatus, errorThrown) {
+				// TODO: Define how to handle error
+			}
+		});*/
+	}
+	
+	Acts.prototype.registerPlayer = function(playerName, userAction, timeout) {
+		playerName = ("" == playerName || "" === playerName) ? null : playerName;
+		userAction = userAction == 1;
+		console.log("Registering player " + playerName + " as user action = " + userAction);
+		/*jQuery.ajax({
+			"url": "http://www.pilgrimsgamestudio.com/sservices/register_player.php"
+			"data": {}, // TODO retrieve data from device
+			"timeout": getValidTimeout(timeout),
+			"dataType": "json",
+			"type": "POST",
+			"success": function(data, textStatus, jqXHR) {
+				// TODO: Define how to handle success
+			},
+			"error": function(jqXHR, textStatus, errorThrown) {
+				// TODO: Define how to handle error
+			}
+		});*/
+	}
+	
+	function getValidTimeout(timeout) {
+		var ret = this.defaultTimeout;
+		if (timeout != null && typeof timeout == "number"
+				&& timeout > 0) {
+			ret = timeout;
+		} else if(timeout != null && typeof timeout == "string"
+				&& !isNaN(parseInt(timeout))) {
+			ret = parseInt(timeout)
+		}
+		
+		return ret;
+	}
 	
 	// ... other actions here ...
 	

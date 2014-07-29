@@ -15,8 +15,17 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 {
 	var pluginProto = cr.plugins_.PilgrimsSocialServices.prototype;
 
+	var loggingPattern;
 	var defaultTimeout;
 	var webstorageAvailable = false;
+
+	var loggedPlayer = null;
+
+	var getDeviceId = function() {
+		if (this.runtime.isCocoonJs) {
+			return CocoonJS["App"].getDeviceInfo()["platformId"];
+		}
+	}
 	/////////////////////////////////////
 	// Object type class
 	pluginProto.Type = function(plugin)
@@ -47,7 +56,8 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	// called whenever an instance is created
 	instanceProto.onCreate = function() {
 		// note the object is sealed after this call; ensure any properties you'll ever need are set on the object
-		this.defaultTimeout = this.properties[2];
+		this.loggingPattern = this.properties[0];
+		this.defaultTimeout = this.properties[1];
 		
 		if (typeof cr.plugins_.WebStorage == "undefined") {
 			alert("WebStorage is not added to the project, this plugin is necessary to Pilgrim's Social Services");
@@ -124,8 +134,23 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 
 	Cnds.prototype.onLeaderboardRetrieveSuccess = function(leaderboardName) {
 		console.log("Checking for " + leaderboardName);
+		return typeof leaderboards[leaderboardName] != "undefined"
+					&& leaderboards[leaderboardName] != null;
+	}
+
+	Cnds.prototype.onLeaderboardRetrieveFailure = function(leaderboardName) {
+		console.log("Checking for " + leaderboardName);
 		return false;
 	}
+
+	Cnds.prototype.onLoginPlayerSuccess = function() {
+		return false;
+	}
+
+	Cnds.prototype.onLoginPlayerFailure = function() {
+		return false;
+	}
+
 	// the example condition
 	/*Cnds.prototype.MyCondition = function (myparam)
 	{
@@ -163,32 +188,39 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	Acts.prototype.logMessage = function (level, message) {
 		if (typeof console !== "undefined" && console != null) {
 			if (level.toLowerCase() === "debug") {
-				console.debug(message);
+				console.debug(formatLogMessage(level, message, loggingPattern));
 			} else if (level.toLowerCase() === "info") {
-				console.info(message);
+				console.info(formatLogMessage(level, message, loggingPattern));
 			} else if (level.toLowerCase() === "error") {
-				console.error(message);
+				console.error(formatLogMessage(level, message, loggingPattern));
 			} else {
-				console.log(message);
+				console.log(formatLogMessage(level, message, loggingPattern));
 			}
 		}
+	}
+
+	function formatLogMessage(level, message, pattern) {
+		return parseDate(new Date(), pattern.replace("{m}", message)
+				.replace("{level}, level"));
 	}
 	
 	Acts.prototype.getLeaderboardByName = function(leaderboardName, timeout) {
 		console.log("Get leaderboard " + leaderboardName);
-		/*jQuery.ajax({
-			"url": "http://www.pilgrimsgamestudio.com/sservices/login_player.php"
-			"data": {}, // TODO retrieve data from device
+		jQuery.ajax({
+			"url": "http://www.pilgrimsgamestudio.com/sservices/get_leaderboard.php"
+			"data": {"name": leaderboardName}, 
 			"timeout": getValidTimeout(timeout),
 			"dataType": "json",
 			"type": "GET",
 			"success": function(data, textStatus, jqXHR) {
+				var leaderboard = new Leaderboard(data.id, data.name, data.scores);
+				leaderboards[leaderboard.name] = leaderboard;
 				this.runtime.trigger(cr.plugins_.PilgrimsSocialServices.prototype.cnds.onLeaderboardRetrieveSuccess, this);
 			},
 			"error": function(jqXHR, textStatus, errorThrown) {
-				// TODO: Define how to handle error
+				this.runtime.trigger(cr.plugins_.PilgrimsSocialServices.prototype.cnds.onLeaderboardRetrieveSuccess, this);
 			}
-		});*/
+		});
 	}
 	
 	Acts.prototype.registerPlayer = function(playerName, userAction, timeout) {
@@ -231,17 +263,18 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	// Expressions
 	function Exps() {};
 	
-	// the example expression
-	/*Exps.prototype.MyExpression = function (ret)	// 'ret' must always be the first parameter - always return the expression's result through it!
-	{
-		ret.set_int(1337);				// return our value
-		// ret.set_float(0.5);			// for returning floats
-		// ret.set_string("Hello");		// for ef_return_string
-		// ret.set_any("woo");			// for ef_return_any, accepts either a number or string
-	};*/
-	
-	// ... other expressions here ...
-	
+	function isPlayerLogged() {
+		return typeof loggedPlayer !== "undefined" && loggedPlayer != null;
+	} 
+
+	Exps.prototype.isPlayerLogged = function(ret) {
+		ret.set_int(isPlayerLogged() ? 1 : 0);
+	}
+
+	Exps.prototype.isPlayerLogged = function(ret) {
+		ret.set_int(isPlayerLogged() ? player.name : null);
+	}
+
 	pluginProto.exps = new Exps();
 
 }());

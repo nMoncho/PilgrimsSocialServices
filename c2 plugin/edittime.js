@@ -54,10 +54,82 @@ function GetPluginSettings()
 //				display_str,		// as appears in event sheet - use {0}, {1} for parameters and also <b></b>, <i></i>
 //				description,		// appears in event wizard dialog when selected
 //				script_name);		// corresponding runtime function name
-AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieve", "default");
+
+var addParamFunctions = {
+	"number": 			AddNumberParam,
+	"string":				AddStringParam,
+	"anyType":			AddAnyTypeParam,
+	"cmp":					AddCmpParam,
+	"comboOption":	AddComboParamOption,
+	"combo":				AddComboParam,
+	"object":				AddObjectParam,
+	"layer":				AddLayerParam,
+	"layout":				AddLayoutParam,
+	"keyb":					AddKeybParam,
+	"animation":		AddAnimationParam,
+	"audio":				AddAudioFileParam
+}
+
+function isIDValid(id) {
+	return !isNaN(id) && id != null && id > 0;
+}
+
+function Parameter(type, label, description, initial_value) {
+	this.type = type;
+	this.label = label;
+	this.description = description;
+	this.initial_value = initial_value;
+}
+
+function AddParameter(param) {
+	if (typeof param.type == "string" && param.type != null 
+				&& typeof param.label != "string" && param.label != null
+				&& typeof param.description != "string" && param.description != null) {
+		var type = param.toLowerCase();
+		var func = addParamFunctions[type];
+		if (typeof func == "function") {
+			func.apply(this, [param.label, param.description, param.initial_value]);
+		} else {
+			alert("Error searching " + type + "in addParamFunctions. Supported types: number, string, anyType, cmp, comboOption, combo, object, layer, layout, keyb, animation, audio."):
+		}
+		}
+	} else {
+		alert("The parameter " + param.label + " has no type, label or description, there are mandatory");
+	}
+}
+
+function AddResponseHandlerConditions(id_success_handler, id_failure_handler
+		, flags, list_name, category, display_str, description, success_script_name, failure_script_name, params) {
+	var i = 0;
+	if (typeof params == "undefined") {
+		params = [];
+	}
+	// First add the success handler
+	if (isIDValid(id_success_handler)) {
+		for (i = 0; i < params.length; i++) {
+			AddParameter(params[i]);
+		}
+		AddCondition(id_success_handler, flags, "[SUCCESS] " + list_name, category, "[SUCCESS] " + display_str, description, success_script_name);
+	}
+	// Last add the failure handler
+	if (isIDValid(id_failure_handler)) {
+		for (i = 0; i < params.length; i++) {
+			AddParameter(params[i]);
+		}
+		AddCondition(id_failure_handler, flags, "[FAILURE] " + list_name, category, "[FAILURE] " + display_str, description, failure_script_name);
+	}
+}
+
+AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieve.", "default");
 AddCondition(1, cf_trigger, "Leaderboard retrieved successfuly", "Social Services"
 	, "Leaderboard {0} retrieve successfully", "Check this condition when you have requested for a leaderboard"
 	, "onLeaderboardRetrieveSuccess");
+AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieve.", "default");
+AddCondition(2, cf_trigger, "Leaderboard retrieved failed", "Social Services"
+	, "Leaderboard {0} retrieve failed", "Check this condition when you have requested for a leaderboard"
+	, "onLeaderboardRetrieveFailure");
+
+AddResponseHandlerConditions(3, 4, cf_trigger, " Log-in Player", "Social Services", "Player logged in", "Check this condition when you have requested for a user to be logged in", "onLoginPlayerSuccess", "onLoginPlayerFailure");
 
 ////////////////////////////////////////
 // Actions
@@ -71,13 +143,13 @@ AddCondition(1, cf_trigger, "Leaderboard retrieved successfuly", "Social Service
 //			 script_name);		// corresponding runtime function name
 
 AddNumberParam("Request timeout", "Enter the request timeout (in seconds) for this server interaction.", "60");
-AddAction(100, af_none, "Log-in player", "Social Services", "Log-in player", "Logs in the player using the game. TODO: treat response", "loginPlayer");
+AddAction(100, af_none, "Log-in player", "Social Services", "Log-in player", "Logs in the player using the game.", "loginPlayer");
 
 AddStringParam("Log level", "Defines the log level to be used in the loggin Enum{debug, info, error}", "\"info\"");
 AddStringParam("Message", "Message to log to the console");
 AddAction(101, af_none, "Log message", "General", "Logs message {0}.{1}", "Log message to Chrome/Firebug console for debug and error", "logMessage");
 
-AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieved", "\"default\"");
+AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieved.", "\"default\"");
 AddNumberParam("Request timeout", "Enter the request timeout (in seconds) for this server interaction.", "60");
 AddAction(102, af_none, "Get Leaderboard by name", "Social Services", "Get Leaderboard {0}", "Retrives leaderboard from server with all its scores, you must watch for 'Leaderboard retrieved successfuly' condition", "getLeaderboardByName");
 
@@ -100,6 +172,9 @@ AddAction(103, af_none, "Register player", "Social Services", "Register player {
 //				 exp_name,		// the expression name after the dot, e.g. "foo" for "myobject.foo" - also the runtime function name
 //				 description);	// description in expressions panel
 
+AddExpression(1001, ef_return_number, "Is any player logged?", "Social Services", "isPlayerLogged", "Check if a player is logged in the current play session. 1 == true, otherwise == false");
+AddExpression(1001, ef_return_string, "Logged player name", "Social Services", "loggedPlayerName", "Get the logged player name in this device, returns an empty string if there isn't a logged player.");
+
 
 ////////////////////////////////////////
 ACESDone();
@@ -115,9 +190,10 @@ ACESDone();
 // new cr.Property(ept_link,		name,	link_text,		description, "firstonly")		// has no associated value; simply calls "OnPropertyChanged" on click
 
 var property_list = [
-	new cr.Property(ept_text, "logging_pattern", "hh:mm:ss:sss {m}", "Defines the logging pattern to be used (i.e. hh:mm:ss:sss {m} or dd/MM/yyyy {m})"),
-	new cr.Property(ept_text, "Game name", "SparkCity", "Defines the name of this game, it's used when retrieving all data from this game"),
-	new cr.Property(ept_integer, "Default timeout",	60,	"Defines the default timeout for all operations that must connect to the server")
+	new cr.Property(ept_text, "logging_pattern", "hh:mm:ss:sss {m}", "Defines the logging pattern to be used (i.e. hh:mm:ss:sss {m} or dd/MM/yyyy {m})."),
+	new cr.Property(ept_integer, "Default timeout",	60,	"Defines the default timeout for all operations that must connect to the server."),
+	new cr.Property(ept_integer, "Game ID",	0,	"Defines the ID of this game, if it's not supplied it will be fetched from the server the first game session."),
+	new cr.Property(ept_text, "Game name", "SparkCity", "Defines the name of this game, it's used when retrieving all data from this game.")
 	];
 	
 // Called by IDE when a new object type is to be created

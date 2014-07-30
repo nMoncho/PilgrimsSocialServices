@@ -130,6 +130,9 @@ AddCondition(2, cf_trigger, "Leaderboard retrieved failed", "Social Services"
 	, "onLeaderboardRetrieveFailure");
 
 AddResponseHandlerConditions(3, 4, cf_trigger, " Log-in Player", "Social Services", "Player logged in", "Check this condition when you have requested for a user to be logged in", "onLoginPlayerSuccess", "onLoginPlayerFailure");
+AddResponseHandlerConditions(5, 6, cf_trigger, " Register Player", "Social Services", "Player registered", "Check this condition when you have requested a player to be registered", "onPlayerRegisterSuccess", "onPlayerRegisterFailure");
+
+AddCondition(7, cf_none, "Is Player logged-in?", "Social Services", "Is Player logged-in?", "Check if a player is logged in", "isPlayerLoggedIn");
 
 ////////////////////////////////////////
 // Actions
@@ -158,6 +161,9 @@ AddNumberParam("Is User action?", "Specifies if the registering is being request
 AddNumberParam("Request timeout", "Enter the request timeout (in seconds) for this server interaction.", "60");
 AddAction(103, af_none, "Register player", "Social Services", "Register player {0} being {1} user action", "Registers a player in the server", "registerPlayer");
 
+AddNumberParam("Score", "Specifies the score obtained", "0");
+AddAction(104, af_none, "Register Score", "Social Services", "Register {0} points to logged player", "Registers score points", "registerScore");
+
 // AddStringParam("Message", "Enter a string to alert.");
 // AddAction(0, af_none, "Alert", "My category", "Alert {0}", "Description for my action!", "MyAction");
 
@@ -174,6 +180,7 @@ AddAction(103, af_none, "Register player", "Social Services", "Register player {
 
 AddExpression(1001, ef_return_number, "Is any player logged?", "Social Services", "isPlayerLogged", "Check if a player is logged in the current play session. 1 == true, otherwise == false");
 AddExpression(1001, ef_return_string, "Logged player name", "Social Services", "loggedPlayerName", "Get the logged player name in this device, returns an empty string if there isn't a logged player.");
+AddExpression(1002, ef_return_string, "Device ID", "General", "deviceId", "Get the device id that is running the game. If testing in a browser provides a seudo-GUID.");
 
 
 ////////////////////////////////////////

@@ -13,19 +13,69 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 
 (function ()
 {
+	var PILGRIMS_URL = "http://www.pilgrimsgamestudio.com";
+	var SSERVICES_URL = PILGRIMS_URL + "/sservices";
+	var REGISTER_PLAYER_URL = PILGRIMS_URL + "/register_player.php";
+	var LOGIN_PLAYER_URL = PILGRIMS_URL + "/login_player.php";
+	var GET_LEADERBOARD = PILGRIMS_URL + "/get_leaderboard.php";
+	var REGISTER_SCORE = PILGRIMS_URL + "/register_score.php";
+
+	var DEVICE_ID_KEY = "pilgrims.deviceID";
+
 	var pluginProto = cr.plugins_.PilgrimsSocialServices.prototype;
 
 	var loggingPattern;
 	var defaultTimeout;
+	var currentGame;
 	var webstorageAvailable = false;
 
 	var loggedPlayer = null;
 
 	var getDeviceId = function() {
-		if (this.runtime.isCocoonJs) {
-			return CocoonJS["App"].getDeviceInfo()["platformId"];
+		var deviceId;
+		if (webstorageAvailable 
+					&& cr.plugins_.WebStorage.prototype.cnds.LocalKeyExists(DEVICE_ID_KEY)) { // TODO: check real condition
+			var mockRet = new MockExpressionRet();
+			cr.plugins_.WebStorage.prototype.exps.LocalValue(mockRet); // TODO: check real expression
+			deviceId = mockRet.ret;		
+		} else {
+			if (this.runtime.isCocoonJs) {
+				deviceId = CocoonJS["App"].getDeviceInfo()["platformId"];
+			} else {
+				deviceId = mockGuid();
+			}
+
+			setDeviceId(deviceId);
+		}
+
+		return deviceId;
+	}
+
+	var setDeviceId = function(deviceId) {
+		if (webstorageAvailable) {
+			cr.plugins_.WebStorage.prototype.acts.SetLocalKey(DEVICE_ID_KEY, deviceId);
 		}
 	}
+
+	var logMessage = function (level, message) {
+		if (typeof console !== "undefined" && console != null) {
+			if (level.toLowerCase() === "debug") {
+				console.debug(formatLogMessage(level, message, loggingPattern));
+			} else if (level.toLowerCase() === "info") {
+				console.info(formatLogMessage(level, message, loggingPattern));
+			} else if (level.toLowerCase() === "error") {
+				console.error(formatLogMessage(level, message, loggingPattern));
+			} else {
+				console.log(formatLogMessage(level, message, loggingPattern));
+			}
+		}
+	}
+
+	function formatLogMessage(level, message, pattern) {
+		return parseDate(new Date(), pattern.replace("{m}", message)
+				.replace("{level}, level"));
+	}
+
 	/////////////////////////////////////
 	// Object type class
 	pluginProto.Type = function(plugin)
@@ -58,6 +108,7 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 		// note the object is sealed after this call; ensure any properties you'll ever need are set on the object
 		this.loggingPattern = this.properties[0];
 		this.defaultTimeout = this.properties[1];
+		this.currentGame = new Game(this.properties[2], this.properties[3]);
 		
 		if (typeof cr.plugins_.WebStorage == "undefined") {
 			alert("WebStorage is not added to the project, this plugin is necessary to Pilgrim's Social Services");
@@ -96,6 +147,13 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	// The comments around these functions ensure they are removed when exporting, since the
 	// debugger code is no longer relevant after publishing.
 	/**BEGIN-PREVIEWONLY**/
+	PILGRIMS_URL = "http://localhost:8080";
+	SSERVICES_URL = PILGRIMS_URL + "/sservices";
+	REGISTER_PLAYER_URL = PILGRIMS_URL + "/register_player.php";
+	LOGIN_PLAYER_URL = PILGRIMS_URL + "/login_player.php";
+	GET_LEADERBOARD = PILGRIMS_URL + "/get_leaderboard.php";
+	REGISTER_SCORE = PILGRIMS_URL + "/register_score.php";
+
 	instanceProto.getDebuggerValues = function (propsections)
 	{
 		// Append to propsections any debugger sections you want to appear.
@@ -144,11 +202,23 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	}
 
 	Cnds.prototype.onLoginPlayerSuccess = function() {
-		return false;
+		return true; // TODO: check if this condition isn't triggered all the time
 	}
 
 	Cnds.prototype.onLoginPlayerFailure = function() {
-		return false;
+		return true; // TODO: check if this condition isn't triggered all the time
+	}
+
+	Cnds.prototype.onPlayerRegisterSuccess =  function() {
+		return true; // TODO: check if this condition isn't triggered all the time
+	}
+
+	Cnds.prototype.onPlayerRegisterFailure =  function() {
+		return true; // TODO: check if this condition isn't triggered all the time
+	}
+
+	Cnds.prototype.isPlayerLoggedIn = function() {
+		return loggedPlayer != null;
 	}
 
 	// the example condition
@@ -185,24 +255,7 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 		});*/
 	};
 	
-	Acts.prototype.logMessage = function (level, message) {
-		if (typeof console !== "undefined" && console != null) {
-			if (level.toLowerCase() === "debug") {
-				console.debug(formatLogMessage(level, message, loggingPattern));
-			} else if (level.toLowerCase() === "info") {
-				console.info(formatLogMessage(level, message, loggingPattern));
-			} else if (level.toLowerCase() === "error") {
-				console.error(formatLogMessage(level, message, loggingPattern));
-			} else {
-				console.log(formatLogMessage(level, message, loggingPattern));
-			}
-		}
-	}
-
-	function formatLogMessage(level, message, pattern) {
-		return parseDate(new Date(), pattern.replace("{m}", message)
-				.replace("{level}, level"));
-	}
+	Acts.prototype.logMessage = logMessage;
 	
 	Acts.prototype.getLeaderboardByName = function(leaderboardName, timeout) {
 		console.log("Get leaderboard " + leaderboardName);
@@ -225,21 +278,51 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	
 	Acts.prototype.registerPlayer = function(playerName, userAction, timeout) {
 		playerName = ("" == playerName || "" === playerName) ? null : playerName;
-		userAction = userAction == 1;
+		userAction = (1 == userAction);
+		var deviceId = getDeviceId();
 		console.log("Registering player " + playerName + " as user action = " + userAction);
-		/*jQuery.ajax({
-			"url": "http://www.pilgrimsgamestudio.com/sservices/register_player.php"
-			"data": {}, // TODO retrieve data from device
+		jQuery.ajax({
+			"url": REGISTER_PLAYER_URL,
+			"data": playerName != null 
+					? {"name": player_name, "user_action": userAction, "device_id": deviceId}
+					: {"user_action": userAction, "device_id": deviceId},
 			"timeout": getValidTimeout(timeout),
 			"dataType": "json",
 			"type": "POST",
 			"success": function(data, textStatus, jqXHR) {
-				// TODO: Define how to handle success
+				loggedPlayer = new Player(data.id, data.name, data.deviceId);
+				this.runtime.trigger(cr.plugins_.PilgrimsSocialServices.prototype.cnds.onPlayerRegisterSuccess, this);
 			},
 			"error": function(jqXHR, textStatus, errorThrown) {
-				// TODO: Define how to handle error
+				logMessage("error", "Error trying to register an user " + errorThrown);
+				this.runtime.trigger(cr.plugins_.PilgrimsSocialServices.prototype.cnds.onPlayerRegisterFailure, this);
 			}
-		});*/
+		});
+	}
+
+	Acts.prototype.registerScore = function(score) {
+		if (loggedPlayer != null) {
+			console.log("Registering score " + score + " for player " + loggedPlayer.name);
+			var deviceId = getDeviceId();
+			jQuery.ajax({
+				"url": REGISTER_SCORE,
+				"data": {"player_id": loggerPlayer.id, "score": score, "device_id": deviceId, "": },
+				"timeout": getValidTimeout(timeout),
+				"dataType": "json",
+				"type": "POST",
+				"success": function(data, textStatus, jqXHR) {
+					loggedPlayer = new Player(data.id, data.name, data.deviceId);
+					this.runtime.trigger(cr.plugins_.PilgrimsSocialServices.prototype.cnds.onPlayerRegisterSuccess, this);
+				},
+				"error": function(jqXHR, textStatus, errorThrown) {
+					logMessage("error", "Error trying to register an user " + errorThrown);
+					this.runtime.trigger(cr.plugins_.PilgrimsSocialServices.prototype.cnds.onPlayerRegisterFailure, this);
+				}
+			});
+		} else {
+			
+		}
+		
 	}
 	
 	function getValidTimeout(timeout) {
@@ -273,6 +356,10 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 
 	Exps.prototype.isPlayerLogged = function(ret) {
 		ret.set_int(isPlayerLogged() ? player.name : null);
+	}
+
+	Exps.prototype.deviceId = function(ret) {
+		ret.set_string(getDeviceId());
 	}
 
 	pluginProto.exps = new Exps();

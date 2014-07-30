@@ -6,6 +6,11 @@ var leaderboards = {};
 
 var dateSupportedTokens = ["dd", "MM", "yyyy", "yy", "hh", "mm", "sss", "ss"];
 
+function Game(id, name) {
+	this.id = typeof id != "undefined" ? (id > 0 ? id : null) : null;
+	this.name = typeof name != "undefined" ? name : null;
+}
+
 function Leaderboard(id, name, scores) {
 	this.id = typeof id != "undefined" ? id : null;
 	this.name = typeof name != "undefined" ? name : null;
@@ -28,10 +33,10 @@ function Score(id, score, player) {
 	}
 }
 
-function Player(id, name) {
+function Player(id, name, deviceId) {
 	this.id = typeof id != "undefined" ? id : null;
 	this.name = typeof name != "undefined" ? name : null;
-	this.deviceId = null; 
+	this.deviceId = typeof deviceId != "undefined" ? deviceId : null; 
 }
 
 function parseDate(date, pattern) {
@@ -85,3 +90,35 @@ function extractDateFragment(date, pattern) {
 
 	return extract;
 }
+
+var mockGuid = (function() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+               .toString(16)
+               .substring(1);
+  }
+  return function() {
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+           s4() + '-' + s4() + s4() + s4();
+  };
+})();
+
+function MockExpressionRet() {
+}
+
+MockExpressionRet.prototype.set_int = function(val) {
+	this.ret = val;
+}
+
+MockExpressionRet.prototype.set_float = function(val) {
+	this.ret = val;
+}
+
+MockExpressionRet.prototype.set_string = function(val) {
+	this.ret = val;
+}
+
+MockExpressionRet.prototype.set_any = function(val) {
+	this.ret = val;
+}
+

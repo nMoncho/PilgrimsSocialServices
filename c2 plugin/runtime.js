@@ -29,14 +29,15 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	var currentGame;
 	var webstorageAvailable = false;
 
+	var playerRetrieveInProgress = false;
 	var loggedPlayer = null;
 
 	var getDeviceId = function() {
 		var deviceId;
 		if (webstorageAvailable 
-					&& cr.plugins_.WebStorage.prototype.cnds.LocalKeyExists(DEVICE_ID_KEY)) { // TODO: check real condition
+					&& cr.plugins_.WebStorage.prototype.cnds.LocalStorageExists(DEVICE_ID_KEY)) {
 			var mockRet = new MockExpressionRet();
-			cr.plugins_.WebStorage.prototype.exps.LocalValue(mockRet); // TODO: check real expression
+			cr.plugins_.WebStorage.prototype.exps.LocalValue(mockRet);
 			deviceId = mockRet.ret;		
 		} else {
 			if (this.runtime.isCocoonJs) {
@@ -218,7 +219,7 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	}
 
 	Cnds.prototype.isPlayerLoggedIn = function() {
-		return loggedPlayer != null;
+		return loggedPlayer != null && !playerRetrieveInProgress;
 	}
 
 	// the example condition
@@ -240,19 +241,22 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	Acts.prototype.loginPlayer = function(timeout) {
 		console.log("loginPlayer");
 		// TODO: retrieve login (username, password)
-		/*jQuery.ajax({
-			"url": "http://www.pilgrimsgamestudio.com/sservices/login_player.php"
-			"data": {}, // TODO retrieve data from device
+		playerRetrieveInProgress = true;
+		jQuery.ajax({
+			"url": LOGIN_PLAYER_URL,
+			"data": {"deviceId": getDeviceId}, 
 			"timeout": getValidTimeout(timeout),
 			"dataType": "json",
 			"type": "POST",
 			"success": function(data, textStatus, jqXHR) {
 				// TODO: Define how to handle success
+				playerRetrieveInProgress = false;
 			},
 			"error": function(jqXHR, textStatus, errorThrown) {
 				// TODO: Define how to handle error
+				playerRetrieveInProgress = false;
 			}
-		});*/
+		});
 	};
 	
 	Acts.prototype.logMessage = logMessage;
@@ -260,7 +264,7 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	Acts.prototype.getLeaderboardByName = function(leaderboardName, timeout) {
 		console.log("Get leaderboard " + leaderboardName);
 		jQuery.ajax({
-			"url": "http://www.pilgrimsgamestudio.com/sservices/get_leaderboard.php"
+			"url": GET_LEADERBOARD_URL,
 			"data": {"name": leaderboardName}, 
 			"timeout": getValidTimeout(timeout),
 			"dataType": "json",
@@ -306,7 +310,7 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 			var deviceId = getDeviceId();
 			jQuery.ajax({
 				"url": REGISTER_SCORE,
-				"data": {"player_id": loggerPlayer.id, "score": score, "device_id": deviceId, "": },
+				"data": {"player_id": loggerPlayer.id, "score": score, "device_id": deviceId},
 				"timeout": getValidTimeout(timeout),
 				"dataType": "json",
 				"type": "POST",
@@ -315,7 +319,7 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 					this.runtime.trigger(cr.plugins_.PilgrimsSocialServices.prototype.cnds.onPlayerRegisterSuccess, this);
 				},
 				"error": function(jqXHR, textStatus, errorThrown) {
-					logMessage("error", "Error trying to register an user " + errorThrown);
+					logMessage("error", "Error trying to register an score " + errorThrown);
 					this.runtime.trigger(cr.plugins_.PilgrimsSocialServices.prototype.cnds.onPlayerRegisterFailure, this);
 				}
 			});
@@ -347,7 +351,7 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	function Exps() {};
 	
 	function isPlayerLogged() {
-		return typeof loggedPlayer !== "undefined" && loggedPlayer != null;
+		return typeof loggedPlayer !== "undefined" && loggedPlayer != null && !playerRetrieveInProgress;
 	} 
 
 	Exps.prototype.isPlayerLogged = function(ret) {

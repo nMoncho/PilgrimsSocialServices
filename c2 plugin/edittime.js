@@ -90,8 +90,7 @@ function AddParameter(param) {
 		if (typeof func == "function") {
 			func.apply(this, [param.label, param.description, param.initial_value]);
 		} else {
-			alert("Error searching " + type + "in addParamFunctions. Supported types: number, string, anyType, cmp, comboOption, combo, object, layer, layout, keyb, animation, audio."):
-		}
+			alert("Error searching " + type + "in addParamFunctions. Supported types: number, string, anyType, cmp, comboOption, combo, object, layer, layout, keyb, animation, audio.");
 		}
 	} else {
 		alert("The parameter " + param.label + " has no type, label or description, there are mandatory");
@@ -99,7 +98,8 @@ function AddParameter(param) {
 }
 
 function AddResponseHandlerConditions(id_success_handler, id_failure_handler
-		, flags, list_name, category, display_str, description, success_script_name, failure_script_name, params) {
+		, flags, list_name, category, display_str, description
+		, success_script_name, failure_script_name, params) {
 	var i = 0;
 	if (typeof params == "undefined") {
 		params = [];
@@ -120,11 +120,11 @@ function AddResponseHandlerConditions(id_success_handler, id_failure_handler
 	}
 }
 
-AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieve.", "default");
+AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieve.", "\"default\"");
 AddCondition(1, cf_trigger, "Leaderboard retrieved successfuly", "Social Services"
 	, "Leaderboard {0} retrieve successfully", "Check this condition when you have requested for a leaderboard"
 	, "onLeaderboardRetrieveSuccess");
-AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieve.", "default");
+AddStringParam("Leaderboard name", "Name of the leaderboard to be retrieve.", "\"default\"");
 AddCondition(2, cf_trigger, "Leaderboard retrieved failed", "Social Services"
 	, "Leaderboard {0} retrieve failed", "Check this condition when you have requested for a leaderboard"
 	, "onLeaderboardRetrieveFailure");

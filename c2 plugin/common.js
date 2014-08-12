@@ -33,10 +33,10 @@ function Score(id, score, player) {
 	}
 }
 
-function Player(id, name, deviceId) {
+function Player(id, name, uuid) {
 	this.id = typeof id != "undefined" ? id : null;
 	this.name = typeof name != "undefined" ? name : null;
-	this.deviceId = typeof deviceId != "undefined" ? deviceId : null; 
+	this.uuid = typeof uuid != "undefined" ? uuid : null; 
 }
 
 function parseDate(date, pattern) {

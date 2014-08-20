@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script type="text/javascript" src="jquery-2.1.1.min.js" ></script>
+        <script type="text/javascript">
+            function clickCrearUsuario(e) {
+                var nombre = $("#nombre_usuario").val();
+                if ("" == nombre) {
+                    nombre = null;
+                }
+                crearUsuario(nombre);
+            }
+            
+            function crearUsuario(nombre) {
+                console.log("Crear Usuario " + nombre);
+                $.ajax({
+                    url: "crear_usuario.php",
+                    type: "POST",
+                    data: {"name" : nombre, "device_id": "ab502273-2257-2d92-cbe5-d17926b241da"},
+                    dataType: "json"
+                }).done(function(data) {
+                    if (data.error) {
+                        alert("Error: " + data.error.msg);
+                    } else {
+                        alert("Exito!! ");
+                        console.log(data);
+                    }
+                }).fail(function(a, b, c) {
+                    alert("SEVERE ERROR " + c);
+                })
+            }
+            
+            function clickObtenerJuegos(event) {
+                var id_juego = parseInt($("#id_juego_listar").val());
+                if (isNaN(id_juego)) {
+                    id_juego = null;
+                }
+                obtenerJuegos(id_juego);
+            }
+            
+            function obtenerJuegos(id_juego) {
+                console.log("Obtener Juegos");
+                $.ajax({
+                    url: "obtener_juegos.php",
+                    type: "GET",
+                    data: {"id" : id_juego},
+                    dataType: "json"
+                }).done(function(data) {
+                    if (data.error) {
+                        alert("Error: " + data.error.msg);
+                    } else {
+                        $("#listadoJuegos option").remove();
+                        data.forEach(function (val, idx, arr) {
+                            $("#listadoJuegos").append("<option value='" 
+                                + val.id + "'>" + val.nombre + "</option>");
+                        }, this);
+                    }
+                }).fail(function(a, b, c) {
+                    alert("SEVERE ERROR");
+                });
+            }
+            
+            function clickObtenerLeaderboards(event) {
+                var id_leaderboard = parseInt($("#id_leaderboard_listar").val());
+                if (isNaN(id_leaderboard)) {
+                    id_leaderboard = null;
+                }
+                var id_juego = parseInt($("#id_juego_leaderboard").val());
+                if (isNaN(id_juego)) {
+                    id_juego = null;
+                }
+                obtenerLeaderboards(id_leaderboard, id_juego);
+            }
+            
+            function obtenerLeaderboards(id_leaderboard, id_juego) {
+                console.log("Obtener Leaderboards");
+                $.ajax({
+                    url: "obtener_leaderboards.php",
+                    type: "GET",
+                    data: {"id" : id_leaderboard, "id_juego" : id_juego},
+                    dataType: "json"
+                }).done(function(data) {
+                    if (data.error) {
+                        alert("Error: " + data.error.msg);
+                    } else {
+                        $("#listado_leaderboard option").remove();
+                        data.forEach(function (val, idx, arr) {
+                            $("#listado_leaderboard").append("<option value='" 
+                                + val.id + "'>" + val.nombre + "</option>");
+                        }, this);
+                    }
+                }).fail(function(a, b, c) {
+                    alert("SEVERE ERROR");
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <div>
+            Crear usuario: 
+            <input id="nombre_usuario" type="text" />
+            <a href="#" onclick="clickCrearUsuario(event)">Enviar</a>
+        </div>
+        <div>
+            Mostrar juegos:
+            <input id="id_juego_listar" type="text" />
+            Listado de juegos:
+            <select id="listadoJuegos"></select>
+            <a href="#" onclick="clickObtenerJuegos(event)">Obtener</a>
+        </div>
+        <div>
+            Mostrar leaderboards:
+            <input id="id_leaderboard_listar" type="text" />
+            <input id="id_juego_leaderboard" type="text" />
+            Listado de leaderboards:
+            <select id="listado_leaderboard"></select>
+            <a href="#" onclick="clickObtenerLeaderboards(event)">Obtener</a>
+        </div>
+    </body>
+</html>

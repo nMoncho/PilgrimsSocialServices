@@ -289,13 +289,12 @@ cr.plugins_.PilgrimsSocialServices = function(runtime)
 	function Acts() {};
 
 	// the example action
-	Acts.prototype.loginPlayer = function(timeout) {
+	Acts.prototype.loginPlayer = function(timeout, username, password) {
 		console.log("loginPlayer");
-		// TODO: retrieve login (username, password)
 		playerRetrieveInProgress = true;
 		jQuery.ajax({
 			"url": LOGIN_PLAYER_URL,
-			"data": {"deviceId": getDeviceId}, 
+			"data": {"username": username, "password": password, "device_id": getDeviceId}, 
 			"timeout": getValidTimeout(timeout),
 			"dataType": "json",
 			"type": "POST",

@@ -52,6 +52,48 @@ function crearUsuario($nombre_usuario, $uuid_usuario, $device_id) {
         , 'uuid' => $uuid_usuario);
 }
 
+function loginJugadorManual($nombre_usuario, $password_usuario, $device_id, $id_juego) {
+    if ($id_juego == null) {
+        throw new Exception("El usuario $nombre_usuario esta tratando de ingresar a un juego con id nulo.");
+    } elseif ($nombre_usuario == null || $password_usuario) {
+        throw new Exception("Un usuario esta loguearse en el juego $id_juego sin especificar su nombre o password");
+    } elseif (!checkUsuarioPassword($nombre_usuario, $password_usuario)) {
+        throw new Exception("No coincide el usuario $nombre_usuario con su password $password_usuario");
+    }
+
+}
+
+function loginJugadorAutomatico($id_usuario, $uuid_usuario, $device_id, $id_juego) {
+	if ($id_juego == null) {
+        throw new Exception("El usuario $id_usuario/$uuid_usuario esta tratando ingresar a un juego con id nulo.");
+    } elseif ($id_usuario == null) {
+        throw new Exception("Un usuario esta loguearse en el juego $id_juego sin especificar su ID");
+    } elseif (!checkUsuario($id_usuario, $uuid_usuario)) {
+        throw new Exception("No coincide el usuario $id_usuario con su UUID $uuid_usuario");
+    }
+
+	$conn = null;
+	try{
+		$conn = crearConnection();
+		$mysqltime = date ("Y-m-d H:i:s", new DateTime('NOW'));
+		$sql_insert = "INSERT INTO SESIONES_JUEGO(ID_JUEGO, ID_JUGADOR, DEVICE_ID, FECHA_INICIO) 
+			VALUES ($id_juego, $id_jugador, '$device_id', SYSDATE())";
+		if (!mysqli_query($conn, $sql_insert)) {
+        	throw new Exception(mysqli_error($conn));
+    	}
+    	$id_sesion = mysqli_insert_id($conn);
+    	mysqli_commit($conn);
+    	mysqli_close($conn);
+
+    	return array('id' => $id_sesion, 'fechaInicio': $mysqltime);
+	} catch (Exception $e) {
+        if ($conn != null) {
+            mysqli_rollback($conn);
+        }
+        throw $e;
+    }
+}
+
 function checkUsuario($id_usuario, $uuid_usuario) {
     $es_valido = false;
     if($id_usuario != null && $uuid_usuario != null) {
@@ -63,9 +105,41 @@ function checkUsuario($id_usuario, $uuid_usuario) {
         $row = mysqli_fetch_array($result);
 
         $es_valido = $row['CANT'] == 1;
-        if ($row['CANT'] > 1) {
+		if ($row['CANT'] > 1) {
             $cant = $row['CANT'];
             log_message("La busqueda del usuario $id_usuario/$sql_uuid_usuario arrojo $cant resultados", "USUARIOS", "WARN");
+        }
+        mysqli_free_result($result);
+    }
+    
+    return $es_valido;
+}
+
+function obtenerIdUsuarioPorNombre($nombre_usuario, $conn) {
+	$cerrar_conn = false;
+	if ($conn == null) {
+		$conn = crearConnection();
+		$cerrar_conn = true;
+	}
+	
+	
+}
+
+function checkUsuarioPassword($nombre_usuario, $password_usuario) {
+    $es_valido = false;
+    if($nombre_usuario != null && $password_usuario != null) {
+        $conn = crearConnection();
+		$sql_nombre_usuario = mysqli_real_escape_string($conn, $nombre_usuario);
+        $sql_password_usuario = mysqli_real_escape_string($conn, $password_usuario);
+
+        $result = mysqli_query($conn, "SELECT COUNT(*) AS CANT FROM USUARIOS 
+            WHERE NOMBRE = $sql_nombre_usuario AND PASSWORD = '$sql_password_usuario'");
+        $row = mysqli_fetch_array($result);
+
+        $es_valido = $row['CANT'] == 1;
+        if ($row['CANT'] > 1) {
+            $cant = $row['CANT'];
+            log_message("La busqueda del usuario $sql_nombre_usuario/$sql_password_usuario arrojo $cant resultados", "USUARIOS", "WARN");
         }
         mysqli_free_result($result);
     }
@@ -76,9 +150,9 @@ function checkUsuario($id_usuario, $uuid_usuario) {
 function agregar_puntaje($id_juego, $id_usuario, $uuid_usuario, $puntaje, $id_leaderboard) {
     $arr_usuario = null;
     if ($id_juego == null) {
-        throw new Exception("El usuario $id_usuario/$uuid_usuario esta tratando de registrar un puntaje para un juego con id nulo");
+        throw new Exception("El usuario $id_usuario/$uuid_usuario esta tratando de registrar un puntaje para un juego con id nulo.");
     } elseif ($id_usuario == null) {
-        log_message("Un usuario esta tratando de agregar un puntaje sin registrarse antes", "PUNTAJES");
+        log_message("Un usuario esta tratando de agregar un puntaje sin registrarse antes.", "PUNTAJES");
         $nombre_usuario = isset($_POST['nombre_usuario']) ? $_POST['nombre_usuario'] : null; 
         $arr_usuario = crearUsuario($nombre_usuario, $uuid_usuario);
         $id_usuario = intval($arr_usuario["id"]);

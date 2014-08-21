@@ -146,6 +146,8 @@ AddCondition(7, cf_none, "Is Player logged-in?", "Social Services", "Is Player l
 //			 script_name);		// corresponding runtime function name
 
 AddNumberParam("Request timeout", "Enter the request timeout (in seconds) for this server interaction.", "60");
+AddStringParam("Player name", "Enter the players name to be logged");
+AddStringParam("Player password", "Enter the player password to be logged");
 AddAction(100, af_none, "Log-in player", "Social Services", "Log-in player", "Logs in the player using the game.", "loginPlayer");
 
 AddStringParam("Log level", "Defines the log level to be used in the loggin Enum{debug, info, error}", "\"info\"");

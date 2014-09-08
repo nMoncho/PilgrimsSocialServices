@@ -85,7 +85,7 @@ function loginJugadorAutomatico($id_usuario, $uuid_usuario, $device_id, $id_jueg
     	mysqli_commit($conn);
     	mysqli_close($conn);
 
-    	return array('id' => $id_sesion, 'fechaInicio': $mysqltime);
+    	return array('id' => $id_sesion, 'fechaInicio' => $mysqltime);
 	} catch (Exception $e) {
         if ($conn != null) {
             mysqli_rollback($conn);

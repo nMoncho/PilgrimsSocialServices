@@ -16,7 +16,7 @@
     }
 
     $nombre_usuario = $_POST['username'];
-    $password = $_POST['password']);
+    $password = $_POST['password'];
 
     return es_usuario_valido_db($nombre_usuario, $password);
   }
@@ -29,7 +29,8 @@
 
     $result = mssql_query('SELECT COUNT(*) AS CANT FROM USUARIOS WHERE NOMBRE = $nombre_usuario AND PASSWORD = $password');
     $row = mssql_fetch_array($result);
-    return row['CANT'] >= 1;
+    
+    return $row['CANT'] >= 1;
   }
 
   function obtener_usuario($nombre_usuario) {
@@ -65,7 +66,7 @@
     $password = mysqli_real_escape_string($conn, $password);
 
     $delete = "UPDATE USUARIOS SET NOMBRE = '$nombre_usuario', PASSWORD = '$password' WHERE ID = $id";
-    if (!mysqli_query($conn, $update)) {
+    if (!mysqli_query($conn, $delete)) {
       return false;// TODO throw error
     }
   }

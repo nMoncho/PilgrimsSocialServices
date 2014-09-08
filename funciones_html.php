@@ -1,4 +1,35 @@
 <?php
+
+include('funciones.php');
+
+function listar_juegos() {
+    $retorno = array();
+    $conn = crearConnection();
+    $result = mysqli_query($conn, "SELECT * FROM JUEGOS");
+    while ($row = mysqli_fetch_array($result)) {
+        array_push($retorno, array('id' => $row['ID'], 'nombre' => $row['NOMBRE']));
+    }
+    
+    return $retorno;
+}
+
+function listar_leaderboard($id_juego) {
+    $conn = crearConnection();
+    $id_juego = intval(mysqli_real_escape_string($conn, $id_juego));
+    $result_ldb = mysqli_query($conn, "SELECT * FROM LEADERBOARDS WHERE ID_JUEGO = $id_juego");
+    while ($row_ldb = mysqli_fetch_array($result_ldb)) {
+        $id_leaderboard = $row_ldb['ID'];
+        $nombre_leaderboard = $row_ldb['NOMBRE'];
+        $result_scs = mysqli_query($conn, "SELECT * FROM LEADERBOARDS_PUNTAJES WHERE ID_LEADERBOARD = $id_leaderboard AND DEFAULT = 1 ORDER BY PUNTAJE DESC");
+        $score_arr = array();
+        while ($row_scs = mysqli_fetch_array($result_scs)) {
+            array_push($score_arr, array('id' => $row_scs['ID'], 'puntaje' => $row_scs['PUNTAJE']));
+        }
+        
+        return array('id' => $id_leaderboard, 'nombre' => $nombre_leaderboard, 'puntajes' => $score_arr);
+    }
+}
+
 static $http_codes = array (
   100 => "HTTP/1.1 100 Continue",
   101 => "HTTP/1.1 101 Switching Protocols",

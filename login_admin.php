@@ -4,7 +4,7 @@
   $is_post = $_SERVER['REQUEST_METHOD'] === 'POST';
 
   if ($is_post && es_usuario_valido()) {
-    
+    redirect("home.php");
   }
 
   // TODO should throw exceptions, not false

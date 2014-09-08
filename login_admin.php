@@ -86,8 +86,7 @@
 <head>
 <title>Pilgrim's Social Services Login</title>
 </head>
-<body>
-  <form action="login_admin.php" method="post">
+  <form action="login_admin.php" method="POST" >
     <input type="text" name="username" />
     <input type="password" name="password" />
     <input type="submit" value="Ingresar" />

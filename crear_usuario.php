@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $device_id = $_POST['device_id'];
         $uuid_usuario = null;
         
-        $usuario_arr = crearUsuario($nombre_usuario, $uuid_usuario, $device_id);
+        $usuario_arr = crear_jugador($nombre_usuario, $uuid_usuario, $device_id);
         //$usuario_arr = array('id' => 100, 'nombre' => 'Guest 100'
         //, 'uuid' => 'foo bar');
         

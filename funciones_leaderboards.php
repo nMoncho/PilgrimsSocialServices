@@ -1,24 +1,30 @@
 <?php
 
-include ('funciones.php');
-include ('funciones_juegos.php');
+include_once 'funciones.php';
+include_once 'funciones_juegos.php';
 
 static $limite_default = 100;
 
 function listar_leaderboard($id_juego, $incluir_puntajes = false) {
+  $resultado = array();
   $conn = crearConnection();
   $id_juego = intval(mysqli_real_escape_string($conn, $id_juego));
   $result_ldb = mysqli_query($conn, "SELECT * FROM LEADERBOARDS WHERE ID_JUEGO = $id_juego");
   while ($row_ldb = mysqli_fetch_array($result_ldb)) {
     $id_leaderboard = $row_ldb['ID'];
     $nombre_leaderboard = $row_ldb['NOMBRE'];
+    $es_default = $row_ldb['ES_DEFAULT'] == 1;
     $puntajes = array();
     if ($incluir_puntajes) {
       $puntajes = obtener_leaderboard($id_leaderboard);
     }
 
-    return array('id' => $id_leaderboard, 'nombre' => $nombre_leaderboard, 'puntajes' => $puntajes);
+    array_push($resultado
+            , array('id' => $id_leaderboard, 'nombre' => $nombre_leaderboard
+                , 'es_default' => $es_default, 'puntajes' => $puntajes));
   }
+  
+  return $resultado;
 }
 
 /**
@@ -75,9 +81,10 @@ function obtener_leaderboard($id_leaderboard, $incluir_puntajes = false, $conn =
   $result = mysqli_query($conn, "SELECT * FROM LEADERBOARDS WHERE ID = $id_leaderboard");
   while ($row = mysqli_fetch_array($result)) {
     $leaderboard = array('id' => $row['ID'], 'nombre' => $row['NOMBRE']
-            , 'limite' => $row['LIMITE'], 'es_default' => $row['ES_DEFAULT'] == 1);
+        , 'limite' => $row['LIMITE'], 'es_default' => $row['ES_DEFAULT'] == 1
+        , 'puntajes' => array());
     if ($incluir_puntajes) {
-      $puntajes = obtener_leaderboard($id_leaderboard);
+      $puntajes = obtener_puntajes($id_leaderboard, $conn);
       $leaderboard['puntajes'] = $puntajes;
     }
   }
@@ -97,11 +104,11 @@ function obtener_puntajes($id_leaderboard, $conn = null) {
     $close_conn = true;
   }
   
-  $result = mysqli_query($conn, "SELECT * FROM LEADERBOARDS_PUNTAJES 
-        WHERE ID_LEADERBOARD = $id_leaderboard ORDER BY PUNTAJE DESC");
-
+  $result = mysqli_query($conn, "SELECT * FROM LEADERBOARD_PUNTAJES 
+    WHERE ID_LEADERBOARD = $id_leaderboard ORDER BY PUNTAJE DESC");
   while ($row = mysqli_fetch_array($result)) {
-    array_push($puntajes, array('id' => $row['ID'], 'puntaje' => $row['PUNTAJE']));
+    array_push($puntajes, array('id' => $row['ID'], 'puntaje' => $row['PUNTAJE']
+            , 'fecha' => $row['FECHA'], 'id_jugador' => $row['ID_USUARIO']));
   }
   
   if ($close_conn) {
@@ -144,7 +151,7 @@ function actualizar_leaderboard($id_leaderboard, $nombre_leaderboard, $limite, $
   
   $sql_default = $default ? 1 : 0;
   $sql_update = "UPDATE LEADERBOARDS SET NOMBRE = '$nombre_leaderboard'
-    , LIMITE = $limite, ES_DEFECTO = $sql_default WHERE ID = $id_leaderboard";
+    , LIMITE = $limite, ES_DEFAULT = $sql_default WHERE ID = $id_leaderboard";
   $exito = mysqli_query($conn, $sql_update);
 
   mysqli_commit($conn);

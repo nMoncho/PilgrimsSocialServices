@@ -1,6 +1,6 @@
 <?php
 
-include ('funciones.php');
+include_once 'funciones.php';
 
 function listar_jugadores($count = 0, $offset = 0) {
   $resultado = array();

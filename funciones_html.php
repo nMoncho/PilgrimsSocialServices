@@ -1,6 +1,6 @@
 <?php
 
-include('funciones.php');
+include_once 'funciones.php';
 
 /**
  * @return boolean true si el request es un post

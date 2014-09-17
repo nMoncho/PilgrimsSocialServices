@@ -1,5 +1,5 @@
 <?php
-include ('funciones.php');
+include_once 'funciones.php';
 
 function obtener_juegos($id_juego = null) {
     $conn = crearConnection();
@@ -25,7 +25,7 @@ function obtener_juegos($id_juego = null) {
     return $arr_juegos;
 }
 
-function obtener_leaderboard($id_leaderboard = null, $id_juego = null) {
+/*function obtener_leaderboard($id_leaderboard = null, $id_juego = null) {
     $conn = crearConnection();
     if ($id_leaderboard == null && $id_juego == null) {
         $result = mysqli_query($conn, "SELECT ID, NOMBRE, LIMITE, ES_DEFAULT
@@ -60,10 +60,10 @@ function obtener_leaderboard($id_leaderboard = null, $id_juego = null) {
 
     mysqli_close($conn);
     return $arr_juegos;
-}
+}*/
 
-function obtener_puntajes($id_leaderboard) {
+/*function obtener_puntajes($id_leaderboard) {
     
-}
+}*/
 
 ?>

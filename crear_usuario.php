@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-include('funciones.php');
+include_once 'funciones.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {

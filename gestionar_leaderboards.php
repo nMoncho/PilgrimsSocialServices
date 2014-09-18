@@ -25,6 +25,67 @@ if (is_post() && isset($_POST['guardar_puntaje'])) {
 <html>
   <head>
     <title>Mostrar leaderboards</title>
+    <link rel="stylesheet" type="text/css" href="js/jquery-ui.css" >
+    <script type="text/javascript" src="js/jquery-2.1.1.min.js" ></script>
+    <script type="text/javascript" src="js/jquery-ui.js" ></script>
+    <script type="text/javascript">
+      var autocompleteJugadorTimeoutId;
+      var jugadoresNameDatasource = [];
+      var jugadoresDatasource = [];
+      
+      function clickBuscarJugador(e) {
+        
+      }
+      
+      $(document).ready(function() {
+        $("#nombre_jugador")
+        .autocomplete({
+          source: jugadoresNameDatasource
+        })
+        .keypress(function(e) {
+          if (autocompleteJugadorTimeoutId) {
+            clearTimeout(autocompleteJugadorTimeoutId);
+          }
+          autocompleteJugadorTimeoutId = setTimeout(onAutocompleteTimeout, 1000);
+        })
+        .change(function(e) {
+          var inputJugador = $(this).val();
+          if (jugadoresNameDatasource.indexOf(inputJugador) >= 0) {
+            var jugador = jugadoresDatasource[jugadoresNameDatasource.indexOf(inputJugador)];
+            $("#id_jugador_puntaje").val(jugador.id);
+          } else {
+            alert("No seleccionaste ningun jugador valido de la lista");
+          }
+        });
+      });
+      
+      function onAutocompleteTimeout() {
+        var nombre = $("#nombre_jugador").val();
+        $.ajax({
+          headers: {
+                  "Accept": "application/json",
+                  "Content-Type": "application/json"
+          },
+          url: "/funciones_ajax.php",
+          dataType: "json",
+          type: "GET",
+          data: JSON.stringify({"nombre": nombre, "req_func": "ajax_buscar_jugador_nombre_autocomplete"}),
+          success: function(data) {
+            jugadoresDatasource = data instanceof Array ? data : [data];
+            jugadoresNameDatasource = jugadoresDatasource.map(function(val) {
+              return val.nombre;
+            });
+            $("#nombre_jugador").autocomplete({
+              source: jugadoresNameDatasource
+            });
+          },
+          error: function(xhr, status, error) {
+            console.error("%s %s", status, error);
+            alert("Error: " + error);
+          }
+        });
+      }
+    </script>
   </head>
   <body>
     <h1>Gestionar Leaderboards</h1>
@@ -105,17 +166,21 @@ if (is_post() && isset($_POST['guardar_puntaje'])) {
             }
           }
           ?>
-        <form id="agregar_puntaje" action="gestionar_leaderboards.php" method="post">
-          <tr>
-          <td><input type="text" name="puntaje" /></td>
-          <td><input type="text" name="fecha" /></td>
-          <td><input type="text" name="nombre_jugador" /></td>
-          <td><input type="submit" name="agregar_puntaje" value="+" title="Agregar puntaje"></td>
-          </tr>
-        </form>
+        <div>
+          <form id="crearPuntaje" action="gestionar_leaderboards.php" method="post">
+              <input type="hidden" name="id_leaderboard" value="<?php echo $_GET['id_leaderboard'] ?>" />
+              <label>Puntaje: </label>
+              <input type="text" name="puntaje" />
+              <label>Usuario: </label>
+              <input id="nombre_jugador" type="text" name="jugador_puntaje" value="100"/>
+              <input id="id_jugador_puntaje" type="hidden" />
+              <button onclick="clickBuscarJugador(event);">Buscar jugador</button>
+              <br />
+              <input type="submit" name="crear_leaderboard" value="Crear Leaderboard" />
+            </form>
+          </div>
         </tbody>
       </table>
-      
     </div>
     <?php endif; ?>
      <br />
@@ -130,9 +195,10 @@ if (is_post() && isset($_POST['guardar_puntaje'])) {
           <input type="text" name="limite_leaderboard" value="100"/> <br />
           <label for="checkEsDefault">Es default: </label>
           <input id="checkEsDefault" type="checkbox" name="es_default" /> <br />
-          <input type="submit" name="crear_leaderboard" value="Crear Leaderboard" />
-        </form>
-      </div>
+        <br />
+        <input type="submit" name="crear_leaderboard" value="Crear Leaderboard" />
+      </form>
+    </div>
     <?php endif; ?>
   </body>
 </html>

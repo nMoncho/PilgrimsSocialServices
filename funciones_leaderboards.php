@@ -173,7 +173,19 @@ function eliminar_leaderboard($id_leaderboard) {
 }
 
 function crear_puntaje($id_leaderboard, $id_jugador, $puntaje) {
+  $conn = crearConnection();
+  $id_leaderboard = intval(mysqli_escape_string($conn, $id_leaderboard));
+  $id_jugador = intval(mysqli_escape_string($conn, $id_jugador));
+  $puntaje = intval(mysqli_escape_string($conn, $puntaje));
   
+  $sql_insert = "INSERT INTO LEADERBOARD_PUNTAJES(PUNTAJE, ID_LEADERBOARD, FECHA, ID_USUARIO)
+    VALUES ($puntaje, $id_leaderboard, SYSDATE(), $id_jugador)";
+  $exito = mysqli_query($conn, $sql_insert);
+  
+  mysqli_commit($conn);
+  mysqli_close($conn);
+  
+  return $exito;
 }
 
 ?>
